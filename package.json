@@ -1,0 +1,38 @@
+{
+	"name": "Repotchi",
+	"version": "1.2.0",
+	"description": "A terminal pet that feeds on your git commits, pushes and merged merge requests.",
+	"keywords": [
+		"cli",
+		"tui",
+		"terminal",
+		"git",
+		"gitlab",
+		"pet",
+		"tamagotchi"
+	],
+	"license": "MIT",
+	"type": "commonjs",
+	"main": "src/cli.js",
+	"bin": {
+		"pet": "bin/pet"
+	},
+	"files": [
+		"bin",
+		"src",
+		"README.md",
+		"LICENSE",
+		"CHANGELOG.md"
+	],
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"start": "node bin/pet",
+		"test": "bash test/run.sh",
+		"bundle": "node tools/bundle.js",
+		"test:tui": "bash test/tui-manual.sh",
+		"screenshots": "bash tools/screenshots.sh"
+	},
+	"dependencies": {}
+}

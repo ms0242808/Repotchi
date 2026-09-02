@@ -1,0 +1,47 @@
+# repotchi has no dependencies, so CI is just: can node run it, and do the
+# suites pass on every supported Node version.
+stages:
+  - check
+  - build
+
+default:
+  interruptible: true
+
+.node_template: &node_job
+  stage: check
+  before_script:
+    - node --version
+    - git --version
+    - git config --global user.email "ci@example.com"
+    - git config --global user.name "CI"
+  script:
+    - node --check bin/pet
+    - for f in src/*.js tools/*.js; do node --check "$f"; done
+    - bash test/run.sh
+
+test:node18:
+  <<: *node_job
+  image: node:18-bookworm
+
+test:node20:
+  <<: *node_job
+  image: node:20-bookworm
+
+test:node22:
+  <<: *node_job
+  image: node:22-bookworm
+
+# The single-file build is a shipped artifact, so prove it stays in step with
+# src/ rather than trusting whoever last remembered to regenerate it.
+bundle:
+  stage: build
+  image: node:22-bookworm
+  script:
+    - node tools/bundle.js
+    - node --check dist/pet
+    - git diff --exit-code dist/pet || (echo "dist/pet is stale - run 'npm run bundle' and commit"; exit 1)
+    - REPOTCHI_HOME=$(mktemp -d) node dist/pet --version
+  artifacts:
+    paths:
+      - dist/pet
+    expire_in: 30 days

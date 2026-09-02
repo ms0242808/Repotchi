@@ -1,0 +1,63 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # macOS is here deliberately: the panel had only ever been proven on Linux.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: configure git for the test repositories
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI"
+      - name: syntax check
+        run: |
+          node --check bin/pet
+          for f in src/*.js tools/*.js; do node --check "$f"; done
+      - name: test
+        run: bash test/run.sh
+
+  windows:
+    # Windows cannot run the bash suites, so it checks the parts that must work
+    # there: the CLI surface, character-set fallback and the non-TTY frame.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: smoke test the cli
+        shell: pwsh
+        run: |
+          node --check bin/pet
+          node bin/pet --version
+          node bin/pet doctor
+          node bin/pet render --width 60
+          node bin/pet demo --stage dragon
+          node bin/pet status
+
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: the committed bundle must match src/
+        run: |
+          node tools/bundle.js
+          node --check dist/pet
+          git diff --exit-code dist/pet || (echo "dist/pet is stale - run 'npm run bundle' and commit"; exit 1)
