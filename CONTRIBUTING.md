@@ -23,11 +23,11 @@ npm test                 # all suites
 bash test/run.sh cli     # just one
 ```
 
-| Suite | Covers |
-| --- | --- |
-| `test/git.sh` | real repositories: commits, pushes, merges, squash merges, tags, decay, concurrency |
-| `test/cli.sh` | the command surface: bad input, broken environments, `pet doctor` |
-| `test/render.sh` | panel geometry, screens, character sets, badges, sparklines |
+| Suite            | Covers                                                                              |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| `test/git.sh`    | real repositories: commits, pushes, merges, squash merges, tags, decay, concurrency |
+| `test/cli.sh`    | the command surface: bad input, broken environments, `pet doctor`                   |
+| `test/render.sh` | panel geometry, screens, character sets, badges, sparklines                         |
 
 `test/lib.sh` holds the assertions. Each suite prints a `RESULT <pass> <fail>`
 line that `run.sh` aggregates.
@@ -100,3 +100,23 @@ git diff --exit-code dist/pet    # CI enforces this too
 ```
 
 Update `CHANGELOG.md` and the version in `package.json` together.
+
+Push a matching version tag to publish through GitHub Actions:
+
+```bash
+git tag v$(node -p "require('./package.json').version")
+git push origin HEAD --tags
+```
+
+Configure npm Trusted Publishing for this GitHub repository instead of adding
+an `NPM_TOKEN` Actions secret. On npmjs.com, open the `repotchi` package
+settings, add a GitHub Actions trusted publisher, and select this repository,
+and `.github/workflows/publish.yml`. The workflow uses
+OIDC through `id-token: write` and npm provenance.
+
+`GH_TOKEN: ${{ github.token }}` is the short-lived GitHub Actions token used to
+create the GitHub Release. GitHub provides it automatically; do not create a
+secret named `github.token`.
+
+After npm publish succeeds, the workflow creates a GitHub Release for the tag
+and generates its release notes from the commits and merged pull requests.
