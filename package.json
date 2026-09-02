@@ -14,7 +14,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/ms0242808/Repotchi.git"
+		"url": "git+https://github.com/ms0242808/Repotchi.git"
 	},
 	"type": "commonjs",
 	"main": "src/cli.js",
