@@ -1,6 +1,6 @@
 {
 	"name": "repotchi",
-	"version": "1.2.3",
+	"version": "1.2.4",
 	"description": "A terminal pet that feeds on your git commits, pushes and merged merge requests.",
 	"keywords": [
 		"cli",
