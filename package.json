@@ -1,5 +1,5 @@
 {
-	"name": "Repotchi",
+	"name": "repotchi",
 	"version": "1.2.0",
 	"description": "A terminal pet that feeds on your git commits, pushes and merged merge requests.",
 	"keywords": [
