@@ -158,9 +158,14 @@ check "doctor reports it too" 'not installed' "$out"
 section "14. paths are built portably"
 # Windows separators differ, so filesystem paths must go through path.join or
 # path.resolve rather than being glued together with slashes.
-glued=$(rg -c "\+\s*'/'|'/'\s*\+|\+\s*\"/\"|\"/\"\s*\+" "$ROOT/src" 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
+# grep, not ripgrep: the CI runners have no rg, and a missing tool silently
+# counted zero of everything - which reads as "no glued separators" and as
+# "nobody uses path.join". POSIX character classes, not \s, because the BSD
+# grep on macOS does not understand the GNU escapes.
+count_matches() { grep -rcE "$1" "$ROOT/src" 2>/dev/null | awk -F: '{s+=$2} END {print s+0}'; }
+glued=$(count_matches "\+[[:space:]]*'/'|'/'[[:space:]]*\+|\+[[:space:]]*\"/\"|\"/\"[[:space:]]*\+")
 check_num "no hand-concatenated path separators" eq 0 "$glued"
-joins=$(rg -c "path\.(join|resolve|dirname|basename)" "$ROOT/src" 2>/dev/null | awk -F: '{s+=$2} END {print s+0}')
+joins=$(count_matches "path\.(join|resolve|dirname|basename)")
 check_num "paths go through the path module" gt 5 "$joins"
 check_missing "no hardcoded home directory" '/home/' "$(cat "$ROOT"/src/*.js)"
 

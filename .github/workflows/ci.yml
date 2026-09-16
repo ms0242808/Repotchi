@@ -1,9 +1,21 @@
+# repotchi has no dependencies, so CI is just: can node run it, do the suites
+# pass on every supported Node version, and is the shipped bundle still in step
+# with src/. Converted from the old .gitlab-ci.yml, which this repository no
+# longer uses.
 name: ci
 
 on:
   push:
-    branches: [main]
+    # master is this repository's default branch; main is here so a rename does
+    # not silently switch CI off again.
+    branches: [main, master]
   pull_request:
+
+# The GitLab pipeline set `interruptible: true`. This is the equivalent: a new
+# push to the same branch cancels the run it superseded.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -19,6 +31,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+      - name: versions under test
+        run: |
+          node --version
+          git --version
       - name: configure git for the test repositories
         run: |
           git config --global user.email "ci@example.com"
@@ -50,6 +66,8 @@ jobs:
           node bin/pet status
 
   bundle:
+    # The single-file build is a shipped artifact, so prove it stays in step
+    # with src/ rather than trusting whoever last remembered to regenerate it.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,3 +79,10 @@ jobs:
           node tools/bundle.js
           node --check dist/pet
           git diff --exit-code dist/pet || (echo "dist/pet is stale - run 'npm run bundle' and commit"; exit 1)
+      - name: the bundle runs on its own
+        run: REPOTCHI_HOME=$(mktemp -d) node dist/pet --version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pet-bundle
+          path: dist/pet
+          retention-days: 30
